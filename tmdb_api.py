@@ -39,7 +39,7 @@ class TMDbAPI:
             "api_key": self.api_key,
             "language": language,
             "append_to_response": "images",
-            "include_image_language": f"{language[:2]},null"
+            "include_image_language": "en,hi,ta,te,bn,null"  # Include images in all supported languages
         }
         
         try:

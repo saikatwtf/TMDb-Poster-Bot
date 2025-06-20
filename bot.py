@@ -120,44 +120,47 @@ def handle_details(update: Update, context: CallbackContext) -> None:
     # Current language name
     current_lang_name = next((name for name, code in SUPPORTED_LANGUAGES.items() if code == language), "English")
     
-    # Poster button (if available) - Portrait
+    # Poster button (if available) - Portrait (High-Res by default)
     if details.get('poster_path'):
-        poster_url = tmdb.get_poster_url(details['poster_path'], 'medium')
+        poster_url = tmdb.get_poster_url(details['poster_path'], 'original')  # High-Res by default
         keyboard.append([
-            InlineKeyboardButton(f"🖼️ Portrait Poster ({current_lang_name})", url=poster_url),
-            InlineKeyboardButton("🔍 High-Res", url=tmdb.get_poster_url(details['poster_path'], 'original'))
+            InlineKeyboardButton(f"🖼️ Portrait Poster ({current_lang_name})", url=poster_url)
         ])
     else:
         keyboard.append([InlineKeyboardButton("❌ No Portrait Poster Available", callback_data="no_action")])
     
-    # Backdrop button (if available) - Landscape
+    # Backdrop button (if available) - Landscape (High-Res by default)
+    backdrops = details.get('images', {}).get('backdrops', [])
     if details.get('backdrop_path'):
-        backdrop_url = tmdb.get_backdrop_url(details['backdrop_path'], 'medium')
+        backdrop_url = tmdb.get_backdrop_url(details['backdrop_path'], 'original')  # High-Res by default
         keyboard.append([
-            InlineKeyboardButton(f"🌆 Landscape Poster ({current_lang_name})", url=backdrop_url),
-            InlineKeyboardButton("🔍 High-Res", url=tmdb.get_backdrop_url(details['backdrop_path'], 'original'))
+            InlineKeyboardButton(f"🌆 Landscape Poster ({current_lang_name})", url=backdrop_url)
         ])
-    elif details.get('images', {}).get('backdrops'):
+    elif backdrops:
         # If main backdrop not available but there are backdrops in images
-        backdrop = details['images']['backdrops'][0]
-        backdrop_url = tmdb.get_backdrop_url(backdrop['file_path'], 'medium')
+        backdrop = backdrops[0]
+        backdrop_url = tmdb.get_backdrop_url(backdrop['file_path'], 'original')  # High-Res by default
         keyboard.append([
-            InlineKeyboardButton(f"🌆 Landscape Poster ({current_lang_name})", url=backdrop_url),
-            InlineKeyboardButton("🔍 High-Res", url=tmdb.get_backdrop_url(backdrop['file_path'], 'original'))
+            InlineKeyboardButton(f"🌆 Landscape Poster ({current_lang_name})", url=backdrop_url)
         ])
     else:
         keyboard.append([InlineKeyboardButton("❌ No Landscape Poster Available", callback_data="no_action")])
         
-    # Logo button (if available)
+    # View All Backdrops button (if there are multiple backdrops)
+    if len(backdrops) > 1:
+        keyboard.append([
+            InlineKeyboardButton(f"🖼️ View All {len(backdrops)} Backdrops", callback_data=f"backdrops_{media_type}_{media_id}_{language}")
+        ])
+        
+    # Logo button (if available) - High-Res by default
     logos = details.get('images', {}).get('logos', [])
     logos = [logo for logo in logos if logo.get('iso_639_1') == language[:2] or not logo.get('iso_639_1')]
     
     if logos:
         logo = logos[0]  # Get the first logo for the current language or without language specification
-        logo_url = tmdb.get_logo_url(logo['file_path'], 'medium')
+        logo_url = tmdb.get_logo_url(logo['file_path'], 'original')  # High-Res by default
         keyboard.append([
-            InlineKeyboardButton(f"🎥 Logo ({current_lang_name})", url=logo_url),
-            InlineKeyboardButton("🔍 High-Res", url=tmdb.get_logo_url(logo['file_path'], 'original'))
+            InlineKeyboardButton(f"🎥 Logo ({current_lang_name})", url=logo_url)
         ])
     else:
         keyboard.append([InlineKeyboardButton("❌ No Logo Available", callback_data="no_action")])
@@ -166,9 +169,6 @@ def handle_details(update: Update, context: CallbackContext) -> None:
     keyboard.append([
         InlineKeyboardButton("📦 Send All Images", callback_data=f"send_all_{media_type}_{media_id}_{language}")
     ])
-    
-    # Add a header for language options
-    keyboard.append([InlineKeyboardButton("🌐 View Posters in Other Languages 🌐", callback_data="no_action")])
     
     # Language options
     lang_buttons = []
@@ -245,37 +245,44 @@ def handle_send_all_images(update: Update, context: CallbackContext) -> None:
     # Create message with all image links
     message = f"🎬 *{title}* - All Images ({current_lang_name})\n\n"
     
-    # Add poster links
+    # Add poster links (high-res by default)
     if details.get('poster_path'):
-        poster_url = tmdb.get_poster_url(details['poster_path'], 'medium')
-        high_res_poster = tmdb.get_poster_url(details['poster_path'], 'original')
-        message += f"🖼️ *Portrait Poster*:\n{poster_url}\n\n🔍 *High-Res*:\n{high_res_poster}\n\n"
+        poster_url = tmdb.get_poster_url(details['poster_path'], 'original')  # High-res by default
+        message += f"🖼️ *Portrait Poster*:\n{poster_url}\n\n"
     
-    # Add backdrop links
+    # Add backdrop links (high-res by default)
     if details.get('backdrop_path'):
-        backdrop_url = tmdb.get_backdrop_url(details['backdrop_path'], 'medium')
-        high_res_backdrop = tmdb.get_backdrop_url(details['backdrop_path'], 'original')
-        message += f"🌆 *Landscape Poster*:\n{backdrop_url}\n\n🔍 *High-Res*:\n{high_res_backdrop}\n\n"
+        backdrop_url = tmdb.get_backdrop_url(details['backdrop_path'], 'original')  # High-res by default
+        message += f"🌆 *Landscape Poster*:\n{backdrop_url}\n\n"
     elif details.get('images', {}).get('backdrops'):
         backdrop = details['images']['backdrops'][0]
-        backdrop_url = tmdb.get_backdrop_url(backdrop['file_path'], 'medium')
-        high_res_backdrop = tmdb.get_backdrop_url(backdrop['file_path'], 'original')
-        message += f"🌆 *Landscape Poster*:\n{backdrop_url}\n\n🔍 *High-Res*:\n{high_res_backdrop}\n\n"
+        backdrop_url = tmdb.get_backdrop_url(backdrop['file_path'], 'original')  # High-res by default
+        message += f"🌆 *Landscape Poster*:\n{backdrop_url}\n\n"
     
-    # Add logo links
+    # Add logo links (high-res by default)
     logos = details.get('images', {}).get('logos', [])
     logos = [logo for logo in logos if logo.get('iso_639_1') == language[:2] or not logo.get('iso_639_1')]
     
     if logos:
         logo = logos[0]
-        logo_url = tmdb.get_logo_url(logo['file_path'], 'medium')
-        high_res_logo = tmdb.get_logo_url(logo['file_path'], 'original')
-        message += f"🎬 *Logo*:\n{logo_url}\n\n🔍 *High-Res*:\n{high_res_logo}\n\n"
+        logo_url = tmdb.get_logo_url(logo['file_path'], 'original')  # High-res by default
+        message += f"🎬 *Logo*:\n{logo_url}\n\n"
     
-    # Add back button
-    keyboard = [[
+    # Add buttons for backdrops and back
+    keyboard = []
+    
+    # Add view all backdrops button if there are multiple backdrops
+    backdrops = details.get('images', {}).get('backdrops', [])
+    if len(backdrops) > 1:
+        keyboard.append([
+            InlineKeyboardButton(f"🖼️ View All {len(backdrops)} Backdrops", callback_data=f"backdrops_{media_type}_{media_id}_{language}")
+        ])
+    
+    # Back button
+    keyboard.append([
         InlineKeyboardButton("🔙 Back to Details", callback_data=f"details_{media_type}_{media_id}_{language}")
-    ]]
+    ])
+    
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     # Send message with all image links
@@ -293,6 +300,159 @@ def handle_send_all_images(update: Update, context: CallbackContext) -> None:
             reply_markup=reply_markup
         )
 
+def handle_backdrops(update: Update, context: CallbackContext) -> None:
+    """Handle the view all backdrops button."""
+    query = update.callback_query
+    query.answer("Loading all backdrops...")
+    
+    # Parse callback data
+    data_parts = query.data.split('_')
+    if len(data_parts) < 4 or data_parts[0] != 'backdrops':
+        query.edit_message_text("Invalid selection. Please try again.")
+        return
+    
+    _, media_type, media_id, language = data_parts
+    
+    # Get detailed information
+    details = tmdb.get_details(media_type, media_id, language)
+    if not details:
+        query.edit_message_text("Failed to fetch details. Please try again.")
+        return
+    
+    # Get title
+    title = details.get('title', details.get('name', 'Unknown'))
+    
+    # Get all backdrops
+    backdrops = details.get('images', {}).get('backdrops', [])
+    if not backdrops:
+        query.edit_message_text(f"No backdrops found for {title}.")
+        return
+    
+    # Group backdrops by language
+    backdrops_by_lang = {}
+    for backdrop in backdrops:
+        lang_code = backdrop.get('iso_639_1') or 'null'  # Use 'null' for backdrops without language
+        if lang_code not in backdrops_by_lang:
+            backdrops_by_lang[lang_code] = []
+        backdrops_by_lang[lang_code].append(backdrop)
+    
+    # Create message with backdrop count by language
+    message = f"🌆 *{title}* - All Backdrops\n\n"
+    
+    # Create keyboard with language options for backdrops
+    keyboard = []
+    
+    # Add buttons for each language with backdrops
+    for lang_code, lang_backdrops in backdrops_by_lang.items():
+        if lang_code == 'null':
+            lang_name = "No Language"
+        else:
+            lang_name = next((name for name, code in SUPPORTED_LANGUAGES.items() if code.startswith(lang_code)), lang_code)
+        
+        # Button to view all backdrops in this language
+        keyboard.append([
+            InlineKeyboardButton(
+                f"{lang_name} ({len(lang_backdrops)} backdrops)", 
+                callback_data=f"lang_backdrops_{media_type}_{media_id}_{language}_{lang_code}"
+            )
+        ])
+        
+        # Add to message
+        message += f"• {lang_name}: {len(lang_backdrops)} backdrops\n"
+    
+    # Back button
+    keyboard.append([InlineKeyboardButton("🔙 Back to Details", callback_data=f"details_{media_type}_{media_id}_{language}")])
+    
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    # Send message with backdrop language options
+    try:
+        query.edit_message_text(
+            text=message,
+            reply_markup=reply_markup,
+            parse_mode='Markdown'
+        )
+    except Exception as e:
+        logger.error(f"Error showing backdrops: {e}")
+        query.edit_message_text(
+            text="Failed to show backdrops. Please try again.",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("🔙 Back to Details", callback_data=f"details_{media_type}_{media_id}_{language}")
+            ]])
+        )
+
+def handle_lang_backdrops(update: Update, context: CallbackContext) -> None:
+    """Handle showing backdrops for a specific language."""
+    query = update.callback_query
+    query.answer("Loading backdrops...")
+    
+    # Parse callback data
+    data_parts = query.data.split('_')
+    if len(data_parts) < 6 or data_parts[0] != 'lang':
+        query.edit_message_text("Invalid selection. Please try again.")
+        return
+    
+    _, _, media_type, media_id, base_language, backdrop_lang_code = data_parts
+    
+    # Get detailed information
+    details = tmdb.get_details(media_type, media_id, base_language)
+    if not details:
+        query.edit_message_text("Failed to fetch details. Please try again.")
+        return
+    
+    # Get title
+    title = details.get('title', details.get('name', 'Unknown'))
+    
+    # Get all backdrops for the selected language
+    all_backdrops = details.get('images', {}).get('backdrops', [])
+    if backdrop_lang_code == 'null':
+        backdrops = [b for b in all_backdrops if not b.get('iso_639_1')]
+        lang_name = "No Language"
+    else:
+        backdrops = [b for b in all_backdrops if b.get('iso_639_1') == backdrop_lang_code]
+        lang_name = next((name for name, code in SUPPORTED_LANGUAGES.items() if code.startswith(backdrop_lang_code)), backdrop_lang_code)
+    
+    if not backdrops:
+        query.edit_message_text(f"No backdrops found for {title} in {lang_name}.")
+        return
+    
+    # Create message with all backdrop links
+    message = f"🌆 *{title}* - {lang_name} Backdrops ({len(backdrops)})\n\n"
+    
+    # Add all backdrop links (high-res by default)
+    for i, backdrop in enumerate(backdrops[:10]):  # Limit to 10 backdrops to avoid message size limits
+        backdrop_url = tmdb.get_backdrop_url(backdrop['file_path'], 'original')  # High-res by default
+        message += f"*Backdrop {i+1}*:\n{backdrop_url}\n\n"
+    
+    # Note if there are more backdrops
+    if len(backdrops) > 10:
+        message += f"_Note: Showing 10 of {len(backdrops)} backdrops_\n\n"
+    
+    # Back buttons
+    keyboard = [
+        [InlineKeyboardButton("🔙 Back to All Backdrops", callback_data=f"backdrops_{media_type}_{media_id}_{base_language}")],
+        [InlineKeyboardButton("🔙 Back to Details", callback_data=f"details_{media_type}_{media_id}_{base_language}")]
+    ]
+    
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    # Send message with backdrop links
+    try:
+        query.edit_message_text(
+            text=message,
+            reply_markup=reply_markup,
+            parse_mode='Markdown',
+            disable_web_page_preview=True  # Disable preview to avoid showing just one image
+        )
+    except Exception as e:
+        logger.error(f"Error showing language backdrops: {e}")
+        query.edit_message_text(
+            text="Failed to show backdrops. Please try again.",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("🔙 Back to Details", callback_data=f"details_{media_type}_{media_id}_{base_language}")
+            ]])
+        )
+
 def handle_callback_query(update: Update, context: CallbackContext) -> None:
     """Route callback queries to appropriate handlers."""
     query = update.callback_query
@@ -302,6 +462,10 @@ def handle_callback_query(update: Update, context: CallbackContext) -> None:
         handle_details(update, context)
     elif data.startswith('send_all_'):
         handle_send_all_images(update, context)
+    elif data.startswith('backdrops_'):
+        handle_backdrops(update, context)
+    elif data.startswith('lang_backdrops_'):
+        handle_lang_backdrops(update, context)
     elif data == 'back_to_search':
         handle_back_to_search(update, context)
     elif data == 'no_action':
