@@ -1,0 +1,27 @@
+{
+  "name": "TMDb Poster Bot",
+  "description": "A Telegram bot that searches for movies and TV shows using the TMDb API and returns posters and details",
+  "repository": "https://github.com/saikatwtf/TMDb-Poster-Bot",
+  "keywords": ["python", "telegram", "bot", "tmdb", "movies", "tv-shows"],
+  "env": {
+    "TELEGRAM_BOT_TOKEN": {
+      "description": "Your Telegram Bot Token from @BotFather",
+      "required": true
+    },
+    "TMDB_API_KEY": {
+      "description": "Your TMDb API Key from themoviedb.org",
+      "required": true
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  }
+}
