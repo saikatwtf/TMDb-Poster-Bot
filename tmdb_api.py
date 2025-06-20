@@ -1,6 +1,6 @@
 import requests
 import logging
-from config import TMDB_API_KEY, TMDB_API_BASE_URL, TMDB_IMAGE_BASE_URL, POSTER_SIZES, BACKDROP_SIZES
+from config import TMDB_API_KEY, TMDB_API_BASE_URL, TMDB_IMAGE_BASE_URL, POSTER_SIZES, BACKDROP_SIZES, LOGO_SIZES
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -38,7 +38,8 @@ class TMDbAPI:
         params = {
             "api_key": self.api_key,
             "language": language,
-            "append_to_response": "images"
+            "append_to_response": "images",
+            "include_image_language": f"{language[:2]},null"
         }
         
         try:
@@ -63,3 +64,11 @@ class TMDbAPI:
             
         size_key = BACKDROP_SIZES.get(size, "medium")
         return f"{self.image_base_url}/{size_key}{backdrop_path}"
+        
+    def get_logo_url(self, logo_path, size="medium"):
+        """Generate logo URL from logo path"""
+        if not logo_path:
+            return None
+            
+        size_key = LOGO_SIZES.get(size, "medium")
+        return f"{self.image_base_url}/{size_key}{logo_path}"

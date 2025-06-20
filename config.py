@@ -29,6 +29,13 @@ BACKDROP_SIZES = {
     "original": "original"
 }
 
+LOGO_SIZES = {
+    "small": "w154",
+    "medium": "w300",
+    "large": "w500",
+    "original": "original"
+}
+
 # Supported languages
 SUPPORTED_LANGUAGES = {
     "English": "en-US",
