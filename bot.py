@@ -1,7 +1,7 @@
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, MessageHandler, Filters
-from config import TELEGRAM_BOT_TOKEN, SUPPORTED_LANGUAGES
+from config import TELEGRAM_BOT_TOKEN
 from tmdb_api import TMDbAPI
 
 # Enable logging
@@ -118,7 +118,7 @@ def handle_details(update: Update, context: CallbackContext) -> None:
     keyboard = []
     
     # Current language name
-    current_lang_name = next((name for name, code in SUPPORTED_LANGUAGES.items() if code == language), "English")
+    current_lang_name = "English" if language == "en-US" else language
     
     # Poster button (if available) - Portrait (High-Res by default)
     posters = details.get('images', {}).get('posters', [])
@@ -190,20 +190,7 @@ def handle_details(update: Update, context: CallbackContext) -> None:
         InlineKeyboardButton("📦 Send All Images", callback_data=f"send_all_{media_type}_{media_id}_{language}")
     ])
     
-    # Language options
-    lang_buttons = []
-    for lang_name, lang_code in SUPPORTED_LANGUAGES.items():
-        if lang_code != language:
-            lang_buttons.append(
-                InlineKeyboardButton(
-                    f"{lang_name}", 
-                    callback_data=f"details_{media_type}_{media_id}_{lang_code}"
-                )
-            )
-    
-    # Add language buttons in groups of 3
-    for i in range(0, len(lang_buttons), 3):
-        keyboard.append(lang_buttons[i:i+3])
+    # Language options - removed multiple language support
     
     # Back button
     keyboard.append([InlineKeyboardButton("🔙 Back to Search", callback_data=f"back_to_search")])
@@ -260,7 +247,7 @@ def handle_send_all_images(update: Update, context: CallbackContext) -> None:
     
     # Get title
     title = details.get('title', details.get('name', 'Unknown'))
-    current_lang_name = next((name for name, code in SUPPORTED_LANGUAGES.items() if code == language), "English")
+    current_lang_name = "English" if language == "en-US" else language
     
     # Create message with all image links
     message = f"🎬 *{title}* - All Images ({current_lang_name})\n\n"
@@ -381,7 +368,7 @@ def handle_backdrops(update: Update, context: CallbackContext) -> None:
         if lang_code == 'null':
             lang_name = "No Language"
         else:
-            lang_name = next((name for name, code in SUPPORTED_LANGUAGES.items() if code.startswith(lang_code)), lang_code)
+            lang_name = "English" if lang_code == "en" else lang_code
         
         # Button to view all backdrops in this language
         keyboard.append([
@@ -449,7 +436,7 @@ def handle_lang_backdrops(update: Update, context: CallbackContext) -> None:
         lang_name = "No Language"
     else:
         backdrops = [b for b in all_backdrops if b.get('iso_639_1') == backdrop_lang_code]
-        lang_name = next((name for name, code in SUPPORTED_LANGUAGES.items() if code.startswith(backdrop_lang_code)), backdrop_lang_code)
+        lang_name = "English" if backdrop_lang_code == "en" else backdrop_lang_code
     
     if not backdrops:
         query.edit_message_text(f"No backdrops found for {title} in {lang_name}.")
@@ -568,7 +555,7 @@ def handle_posters(update: Update, context: CallbackContext) -> None:
         if lang_code == 'null':
             lang_name = "No Language"
         else:
-            lang_name = next((name for name, code in SUPPORTED_LANGUAGES.items() if code.startswith(lang_code)), lang_code)
+            lang_name = "English" if lang_code == "en" else lang_code
         
         # Button to view all posters in this language
         keyboard.append([
@@ -632,7 +619,7 @@ def handle_lang_posters(update: Update, context: CallbackContext) -> None:
         lang_name = "No Language"
     else:
         posters = [p for p in all_posters if p.get('iso_639_1') == poster_lang_code]
-        lang_name = next((name for name, code in SUPPORTED_LANGUAGES.items() if code.startswith(poster_lang_code)), poster_lang_code)
+        lang_name = "English" if poster_lang_code == "en" else poster_lang_code
     
     if not posters:
         query.edit_message_text(f"No posters found for {title} in {lang_name}.")
@@ -751,7 +738,7 @@ def handle_logos(update: Update, context: CallbackContext) -> None:
         if lang_code == 'null':
             lang_name = "No Language"
         else:
-            lang_name = next((name for name, code in SUPPORTED_LANGUAGES.items() if code.startswith(lang_code)), lang_code)
+            lang_name = "English" if lang_code == "en" else lang_code
         
         # Button to view all logos in this language
         keyboard.append([
@@ -815,7 +802,7 @@ def handle_lang_logos(update: Update, context: CallbackContext) -> None:
         lang_name = "No Language"
     else:
         logos = [l for l in all_logos if l.get('iso_639_1') == logo_lang_code]
-        lang_name = next((name for name, code in SUPPORTED_LANGUAGES.items() if code.startswith(logo_lang_code)), logo_lang_code)
+        lang_name = "English" if logo_lang_code == "en" else logo_lang_code
     
     if not logos:
         query.edit_message_text(f"No logos found for {title} in {lang_name}.")

@@ -36,11 +36,3 @@ LOGO_SIZES = {
     "original": "original"
 }
 
-# Supported languages
-SUPPORTED_LANGUAGES = {
-    "English": "en-US",
-    "Hindi": "hi-IN",
-    "Tamil": "ta-IN",
-    "Telugu": "te-IN",
-    "Bengali": "bn-IN"
-}
